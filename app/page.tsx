@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import {
   PieChart,
   Pie,
@@ -11,12 +12,26 @@ import {
 import { supabase } from '@/lib/supabase'
 
 export default function Home() {
-  const [type, setType] = useState('expense')
-  const [amount, setAmount] = useState('')
-  const [note, setNote] = useState('')
-  const [category, setCategory] = useState('1')
+  // =========================
+  // STATES
+  // =========================
+
+  const [type, setType] =
+    useState('expense')
+
+  const [amount, setAmount] =
+    useState('')
+
+  const [note, setNote] =
+    useState('')
+
+  const [category, setCategory] =
+    useState('1')
 
   const [transactions, setTransactions] =
+    useState<any[]>([])
+
+  const [categories, setCategories] =
     useState<any[]>([])
 
   const [selectedMonth, setSelectedMonth] =
@@ -24,11 +39,8 @@ export default function Home() {
       new Date().getMonth() + 1
     )
 
-  const [categories, setCategories] =
-    useState<any[]>([])
-
   // =========================
-  // FILTER
+  // FILTER TRANSACTIONS
   // =========================
 
   const filteredTransactions =
@@ -127,7 +139,7 @@ export default function Home() {
   )
 
   // =========================
-  // FETCH
+  // FETCH DATA
   // =========================
 
   const fetchCategories = async () => {
@@ -168,8 +180,8 @@ export default function Home() {
   // =========================
 
   useEffect(() => {
-    fetchTransactions()
     fetchCategories()
+    fetchTransactions()
   }, [])
 
   // =========================
@@ -182,9 +194,16 @@ export default function Home() {
       .insert([
         {
           amount: Number(amount),
+
           type: type,
-          category_id: Number(category),
+
+          category_id:
+            type === 'expense'
+              ? Number(category)
+              : null,
+
           note: note,
+
           is_recurring: false,
         },
       ])
@@ -214,6 +233,7 @@ export default function Home() {
         {/* HEADER */}
 
         <div className="flex items-center justify-between gap-3 mb-6">
+
           <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex-1">
             <p className="text-sm text-gray-500 mb-1">
               Hôm nay
@@ -271,6 +291,8 @@ export default function Home() {
 
         <div className="bg-white rounded-2xl p-5 shadow-sm flex flex-col gap-4 mb-6">
 
+          {/* TYPE */}
+
           <select
             value={type}
             onChange={(e) =>
@@ -287,22 +309,28 @@ export default function Home() {
             </option>
           </select>
 
-          <select
-            value={category}
-            onChange={(e) =>
-              setCategory(e.target.value)
-            }
-            className="bg-white border border-gray-300 p-4 rounded-xl text-black font-medium"
-          >
-            {categories.map((item) => (
-              <option
-                key={item.id}
-                value={item.id}
-              >
-                {item.name}
-              </option>
-            ))}
-          </select>
+          {/* CATEGORY */}
+
+          {type === 'expense' && (
+            <select
+              value={category}
+              onChange={(e) =>
+                setCategory(e.target.value)
+              }
+              className="bg-white border border-gray-300 p-4 rounded-xl text-black font-medium"
+            >
+              {categories.map((item) => (
+                <option
+                  key={item.id}
+                  value={item.id}
+                >
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {/* AMOUNT */}
 
           <input
             type="number"
@@ -314,6 +342,8 @@ export default function Home() {
             className="bg-white border border-gray-300 p-4 rounded-xl text-black"
           />
 
+          {/* NOTE */}
+
           <input
             type="text"
             placeholder="Ghi chú"
@@ -324,9 +354,11 @@ export default function Home() {
             className="bg-white border border-gray-300 p-4 rounded-xl text-black"
           />
 
+          {/* BUTTON */}
+
           <button
             onClick={addTransaction}
-            className="bg-black text-white p-4 rounded-xl font-medium"
+            className="bg-black text-white p-4 rounded-xl font-medium hover:opacity-90 transition"
           >
             Lưu giao dịch
           </button>
@@ -335,6 +367,7 @@ export default function Home() {
         {/* DASHBOARD */}
 
         <div className="bg-white rounded-2xl p-5 shadow-sm mb-6">
+
           <div className="grid grid-cols-2 gap-4 mb-6">
 
             <div className="bg-gray-50 p-4 rounded-xl">
@@ -369,19 +402,20 @@ export default function Home() {
                 : 'text-red-500'
             }`}
           >
-            {remainingBalance.toLocaleString()}
-            đ
+            {remainingBalance.toLocaleString()}đ
           </p>
         </div>
 
-        {/* CATEGORY BREAKDOWN */}
+        {/* CATEGORY SUMMARY */}
 
         <div className="bg-white rounded-2xl p-5 shadow-sm mb-6">
+
           <h2 className="text-2xl font-extrabold tracking-tight text-black mb-4">
             Chi tiêu theo danh mục
           </h2>
 
           <div className="flex flex-col gap-3">
+
             {categorySummary
               .filter(
                 (item) => item.total > 0
@@ -396,8 +430,7 @@ export default function Home() {
                   </p>
 
                   <p className="font-bold text-black">
-                    {item.total.toLocaleString()}
-                    đ
+                    {item.total.toLocaleString()}đ
                   </p>
                 </div>
               ))}
@@ -407,16 +440,19 @@ export default function Home() {
         {/* PIE CHART */}
 
         <div className="bg-white rounded-2xl p-5 shadow-sm mb-6">
+
           <h2 className="text-2xl font-extrabold tracking-tight text-black mb-4">
             Biểu đồ chi tiêu
           </h2>
 
           <div className="h-72">
+
             <ResponsiveContainer
               width="100%"
               height="100%"
             >
               <PieChart>
+
                 <Pie
                   data={categorySummary.filter(
                     (item) =>
@@ -444,7 +480,10 @@ export default function Home() {
                   <Cell fill="#EAB308" />
                   <Cell fill="#14B8A6" />
                   <Cell fill="#EF4444" />
+                  <Cell fill="#6366F1" />
+                  <Cell fill="#F43F5E" />
                 </Pie>
+
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -453,6 +492,7 @@ export default function Home() {
         {/* TRANSACTIONS */}
 
         <div className="flex flex-col gap-4">
+
           <h2 className="text-2xl font-extrabold tracking-tight text-black mb-2">
             Recent Transactions
           </h2>
@@ -470,8 +510,9 @@ export default function Home() {
                   className="bg-white rounded-2xl p-4 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
+
                     <div>
-                      <p className="font-semibold">
+                      <p className="font-semibold text-black">
                         {transaction.note ||
                           'Không có ghi chú'}
                       </p>
@@ -485,10 +526,22 @@ export default function Home() {
                       </p>
                     </div>
 
-                    <p className="font-bold">
+                    <p
+                      className={`font-bold ${
+                        transaction.type ===
+                        'income'
+                          ? 'text-green-600'
+                          : 'text-red-500'
+                      }`}
+                    >
+                      {transaction.type ===
+                      'income'
+                        ? '+'
+                        : '-'}
                       {transaction.amount.toLocaleString()}
                       đ
                     </p>
+
                   </div>
                 </div>
               )
