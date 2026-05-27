@@ -221,6 +221,29 @@ export default function Home() {
       fetchTransactions()
     }
   }
+const deleteTransaction = async (
+  id: number
+) => {
+  const confirmDelete = window.confirm(
+    'Bạn chắc chắn muốn xoá?'
+  )
+
+  if (!confirmDelete) return
+
+  const { error } = await supabase
+    .from('transactions')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.log(error)
+    alert('Xoá thất bại!')
+  } else {
+    alert('Đã xoá giao dịch')
+
+    fetchTransactions()
+  }
+}
 
   // =========================
   // UI
@@ -541,7 +564,16 @@ export default function Home() {
                       {transaction.amount.toLocaleString()}
                       đ
                     </p>
-
+<button
+  onClick={() =>
+    deleteTransaction(
+      transaction.id
+    )
+  }
+  className="ml-3 text-sm bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition"
+>
+  Xoá
+</button>
                   </div>
                 </div>
               )
