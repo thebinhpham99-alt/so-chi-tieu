@@ -38,7 +38,14 @@ export default function Home() {
     useState(
       new Date().getMonth() + 1
     )
+const [editingId, setEditingId] =
+  useState<number | null>(null)
 
+const [editAmount, setEditAmount] =
+  useState('')
+
+const [editNote, setEditNote] =
+  useState('')
   // =========================
   // FILTER TRANSACTIONS
   // =========================
@@ -244,7 +251,28 @@ const deleteTransaction = async (
     fetchTransactions()
   }
 }
+const updateTransaction = async (
+  id: number
+) => {
+  const { error } = await supabase
+    .from('transactions')
+    .update({
+      amount: Number(editAmount),
+      note: editNote,
+    })
+    .eq('id', id)
 
+  if (error) {
+    console.log(error)
+    alert('Cập nhật thất bại!')
+  } else {
+    alert('Đã cập nhật')
+
+    setEditingId(null)
+
+    fetchTransactions()
+  }
+}
   // =========================
   // UI
   // =========================
@@ -535,19 +563,59 @@ const deleteTransaction = async (
                   <div className="flex items-center justify-between">
 
                     <div>
-                      <p className="font-semibold text-black">
-                        {transaction.note ||
-                          'Không có ghi chú'}
-                      </p>
+  {editingId ===
+  transaction.id ? (
+    <div className="flex flex-col gap-2">
 
-                      <p className="text-sm text-gray-500">
-                        {
-                          transaction
-                            .categories
-                            ?.name
-                        }
-                      </p>
-                    </div>
+      <input
+        type="number"
+        value={editAmount}
+        onChange={(e) =>
+          setEditAmount(
+            e.target.value
+          )
+        }
+        className="border p-2 rounded-lg"
+      />
+
+      <input
+        type="text"
+        value={editNote}
+        onChange={(e) =>
+          setEditNote(
+            e.target.value
+          )
+        }
+        className="border p-2 rounded-lg"
+      />
+
+      <button
+        onClick={() =>
+          updateTransaction(
+            transaction.id
+          )
+        }
+        className="bg-black text-white px-3 py-2 rounded-lg"
+      >
+        Cập nhật
+      </button>
+    </div>
+  ) : (
+    <>
+      <p className="font-semibold text-black">
+        {transaction.note ||
+          'Không có ghi chú'}
+      </p>
+
+      <p className="text-sm text-gray-500">
+        {
+          transaction.categories
+            ?.name
+        }
+      </p>
+    </>
+  )}
+</div>
 
                     <p
                       className={`font-bold ${
@@ -564,6 +632,25 @@ const deleteTransaction = async (
                       {transaction.amount.toLocaleString()}
                       đ
                     </p>
+<button
+  onClick={() => {
+    setEditingId(
+      transaction.id
+    )
+
+    setEditAmount(
+      transaction.amount
+    )
+
+    setEditNote(
+      transaction.note || ''
+    )
+  }}
+  className="ml-3 text-sm bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
+>
+  Sửa
+</button>
+
 <button
   onClick={() =>
     deleteTransaction(
