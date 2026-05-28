@@ -607,6 +607,20 @@ const updateTransaction = async (
           'Không có ghi chú'}
       </p>
 
+<p className="text-xs text-gray-400 mt-1">
+  📅{' '}
+  {new Date(
+    transaction.created_at
+  ).toLocaleDateString(
+    'vi-VN',
+    {
+      weekday: 'short',
+day: 'numeric',
+month: 'short',
+    }
+  )}
+</p>
+
       <p className="text-sm text-gray-500">
         {
           transaction.categories
