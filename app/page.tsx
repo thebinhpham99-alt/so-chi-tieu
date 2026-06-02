@@ -190,6 +190,46 @@ const [editNote, setEditNote] =
     fetchCategories()
     fetchTransactions()
   }, [])
+  
+{/* CATEGORY MANAGEMENT */}
+
+<div className="bg-white rounded-2xl p-5 shadow-sm mb-6">
+
+  <h2 className="text-2xl font-extrabold text-black mb-4">
+    Quản lý danh mục
+  </h2>
+
+  <div className="flex flex-col gap-3">
+
+    {categories.map((item) => (
+      <div
+        key={item.id}
+        className="flex items-center justify-between bg-gray-50 p-4 rounded-xl"
+      >
+        <p className="font-semibold text-black">
+          {item.name}
+        </p>
+
+        <div className="flex items-center gap-2">
+
+          <button
+            className="bg-blue-500 text-white px-3 py-1 rounded-lg"
+          >
+            Sửa
+          </button>
+
+          <button
+            className="bg-red-500 text-white px-3 py-1 rounded-lg"
+          >
+            Xoá
+          </button>
+
+        </div>
+      </div>
+    ))}
+
+  </div>
+</div>
 
   // =========================
   // ADD TRANSACTION
@@ -234,7 +274,41 @@ const deleteTransaction = async (
   const confirmDelete = window.confirm(
     'Bạn chắc chắn muốn xoá?'
   )
+const deleteCategory = async (
+  id: number
+) => {
 
+  const relatedTransactions =
+    transactions.filter(
+      (transaction) =>
+        transaction.category_id === id
+    )
+
+  if (
+    relatedTransactions.length > 0
+  ) {
+    alert(
+      'Danh mục đang có giao dịch, không thể xoá!'
+    )
+
+    return
+  }
+
+  const { error } = await supabase
+    .from('categories')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.log(error)
+
+    alert('Xoá thất bại!')
+  } else {
+    alert('Đã xoá category')
+
+    fetchCategories()
+  }
+}
   if (!confirmDelete) return
 
   const { error } = await supabase
@@ -615,8 +689,8 @@ const updateTransaction = async (
     'vi-VN',
     {
       weekday: 'short',
-day: 'numeric',
-month: 'short',
+      day: 'numeric',
+      month: 'short',
     }
   )}
 </p>
