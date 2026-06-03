@@ -509,40 +509,61 @@ const updateTransaction = async (
 
           <div className="grid grid-cols-2 gap-4 mb-6">
 
-            <div className="bg-gray-50 p-4 rounded-xl">
-              <h2 className="text-sm text-gray-500 mb-1">
-                Fixed Cost
-              </h2>
+  {/* INCOME */}
 
-              <p className="text-2xl font-extrabold text-blue-600">
-                {fixedExpense.toLocaleString()}đ
-              </p>
-            </div>
+  <div className="bg-gray-50 p-4 rounded-xl text-center">
+    <h2 className="text-base font-extrabold text-center text-black mb-2">
+      Thu nhập
+    </h2>
 
-            <div className="bg-gray-50 p-4 rounded-xl">
-              <h2 className="text-sm text-gray-500 mb-1">
-                Variable Cost
-              </h2>
+    <p className="text-2xl font-extrabold text-green-500">
+      +{totalIncome.toLocaleString()}đ
+    </p>
+  </div>
 
-              <p className="text-2xl font-extrabold text-green-600">
-                {variableExpense.toLocaleString()}đ
-              </p>
-            </div>
-          </div>
+  {/* REMAINING */}
 
-          <h2 className="text-sm text-gray-700 font-semibold mb-1">
-            Còn lại
-          </h2>
+  <div className="bg-gray-50 p-4 rounded-xl text-center">
+    <h2 className="text-base font-extrabold text-center text-black mb-2">
+      Còn lại
+    </h2>
 
-          <p
-            className={`text-4xl font-extrabold tracking-tight ${
-              remainingBalance >= 0
-                ? 'text-green-600'
-                : 'text-red-500'
-            }`}
-          >
-            {remainingBalance.toLocaleString()}đ
-          </p>
+    <p
+      className={`text-2xl font-extrabold ${
+        remainingBalance >= 0
+          ? 'text-orange-500'
+          : 'text-red-500'
+      }`}
+    >
+      {remainingBalance.toLocaleString()}đ
+    </p>
+  </div>
+
+  {/* FIXED */}
+
+  <div className="bg-gray-50 p-4 rounded-xl text-center">
+    <h2 className="text-base font-extrabold text-center text-black mb-2">
+      Fixed Cost
+    </h2>
+
+    <p className="text-2xl font-extrabold text-blue-600">
+      {fixedExpense.toLocaleString()}đ
+    </p>
+  </div>
+
+  {/* VARIABLE */}
+
+  <div className="bg-gray-50 p-4 rounded-xl text-center">
+    <h2 className="text-base font-extrabold text-center text-black mb-2">
+      Variable Cost
+    </h2>
+
+    <p className="text-2xl font-extrabold text-green-600">
+      {variableExpense.toLocaleString()}đ
+    </p>
+  </div>
+
+</div>
         </div>
 
         {/* CATEGORY SUMMARY */}
@@ -703,13 +724,13 @@ const updateTransaction = async (
             Recent Transactions
           </h2>
           {selectedCategory && (
-  <p className="text-sm text-gray-500 mb-3">
-    Đang xem danh mục:
-    <span className="font-bold text-black ml-1">
-      {selectedCategory}
-    </span>
-  </p>
-)}
+          <p className="text-sm text-gray-500 mb-3">
+             Đang xem danh mục:
+           <span className="font-bold text-black ml-1">
+         {selectedCategory}
+           </span>
+           </p>
+          )}
           {filteredTransactions.length ===
           0 ? (
             <div className="bg-white rounded-2xl p-6 text-center text-gray-500">
