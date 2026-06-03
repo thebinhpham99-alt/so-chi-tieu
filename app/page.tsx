@@ -38,6 +38,9 @@ export default function Home() {
     useState(
       new Date().getMonth() + 1
     )
+  const [selectedCategory, setSelectedCategory] =
+  useState<string | null>(null)
+
 const [editingId, setEditingId] =
   useState<number | null>(null)
 
@@ -51,16 +54,27 @@ const [editNote, setEditNote] =
   // =========================
 
   const filteredTransactions =
-    transactions.filter((transaction) => {
-      const transactionMonth =
-        new Date(
-          transaction.created_at
-        ).getMonth() + 1
+  transactions.filter((transaction) => {
 
-      return (
-        transactionMonth === selectedMonth
-      )
-    })
+    const transactionMonth =
+      new Date(
+        transaction.created_at
+      ).getMonth() + 1
+
+    const matchMonth =
+      transactionMonth === selectedMonth
+
+    const matchCategory =
+      selectedCategory === null
+        ? true
+        : transaction.categories?.name ===
+          selectedCategory
+
+    return (
+      matchMonth &&
+      matchCategory
+    )
+  })
 
   // =========================
   // TOTALS
@@ -538,7 +552,22 @@ const updateTransaction = async (
           <h2 className="text-2xl font-extrabold tracking-tight text-black mb-4">
             Chi tiêu theo danh mục
           </h2>
+<div className="mb-4">
 
+  <button
+    onClick={() =>
+      setSelectedCategory(null)
+    }
+    className={`px-4 py-2 rounded-xl font-medium transition ${
+      selectedCategory === null
+        ? 'bg-black text-white'
+        : 'bg-gray-100 text-black'
+    }`}
+  >
+    Tất cả
+  </button>
+
+</div>
           <div className="flex flex-col gap-3">
 
             {categorySummary
@@ -546,10 +575,17 @@ const updateTransaction = async (
                 (item) => item.total > 0
               )
               .map((item) => (
-                <div
-                  key={item.name}
-                  className="flex items-center justify-between bg-gray-50 p-4 rounded-xl"
-                >
+                <button
+  key={item.name}
+  onClick={() =>
+    setSelectedCategory(item.name)
+  }
+  className={`flex items-center justify-between p-4 rounded-xl transition w-full ${
+    selectedCategory === item.name
+      ? 'bg-black text-white'
+      : 'bg-gray-50'
+  }`}
+>
                   <p className="font-medium text-gray-800">
                     {item.name}
                   </p>
@@ -557,7 +593,7 @@ const updateTransaction = async (
                   <p className="font-bold text-black">
                     {item.total.toLocaleString()}đ
                   </p>
-                </div>
+                </button>
               ))}
           </div>
         </div>
@@ -579,13 +615,19 @@ const updateTransaction = async (
               <PieChart>
 
                 <Pie
-                  data={categorySummary.filter(
-                    (item) =>
-                      item.total > 0
-                  )}
-                  dataKey="total"
-                  nameKey="name"
-                  outerRadius={75}
+  data={categorySummary.filter(
+    (item) =>
+      item.total > 0
+  )}
+  dataKey="total"
+  nameKey="name"
+  outerRadius={75}
+
+  onClick={(data) => {
+  setSelectedCategory(
+    data?.name || null
+  )
+}}
                   label={({
                     name,
                     percent,
@@ -597,16 +639,55 @@ const updateTransaction = async (
                     ).toFixed(0)}%`
                   }
                 >
-                  <Cell fill="#3B82F6" />
-                  <Cell fill="#22C55E" />
-                  <Cell fill="#F97316" />
-                  <Cell fill="#EC4899" />
-                  <Cell fill="#8B5CF6" />
-                  <Cell fill="#EAB308" />
-                  <Cell fill="#14B8A6" />
-                  <Cell fill="#EF4444" />
-                  <Cell fill="#6366F1" />
-                  <Cell fill="#F43F5E" />
+                  <Cell
+  fill="#3B82F6"
+  cursor="pointer"
+/>
+
+<Cell
+  fill="#22C55E"
+  cursor="pointer"
+/>
+
+<Cell
+  fill="#F97316"
+  cursor="pointer"
+/>
+
+<Cell
+  fill="#EC4899"
+  cursor="pointer"
+/>
+
+<Cell
+  fill="#8B5CF6"
+  cursor="pointer"
+/>
+
+<Cell
+  fill="#EAB308"
+  cursor="pointer"
+/>
+
+<Cell
+  fill="#14B8A6"
+  cursor="pointer"
+/>
+
+<Cell
+  fill="#EF4444"
+  cursor="pointer"
+/>
+
+<Cell
+  fill="#6366F1"
+  cursor="pointer"
+/>
+
+<Cell
+  fill="#F43F5E"
+  cursor="pointer"
+/>
                 </Pie>
 
               </PieChart>
@@ -621,7 +702,14 @@ const updateTransaction = async (
           <h2 className="text-2xl font-extrabold tracking-tight text-black mb-2">
             Recent Transactions
           </h2>
-
+          {selectedCategory && (
+  <p className="text-sm text-gray-500 mb-3">
+    Đang xem danh mục:
+    <span className="font-bold text-black ml-1">
+      {selectedCategory}
+    </span>
+  </p>
+)}
           {filteredTransactions.length ===
           0 ? (
             <div className="bg-white rounded-2xl p-6 text-center text-gray-500">
