@@ -7,6 +7,12 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
 } from 'recharts'
 
 import { supabase } from '@/lib/supabase'
@@ -40,6 +46,9 @@ export default function Home() {
     )
   const [selectedCategory, setSelectedCategory] =
   useState<string | null>(null)
+
+  const [trendType, setTrendType] =
+  useState('expense')
 
 const [editingId, setEditingId] =
   useState<number | null>(null)
@@ -158,6 +167,71 @@ const [editNote, setEditNote] =
       }
     }
   )
+
+const trendData = Array.from({
+  length: 12,
+}).map((_, index) => {
+
+  const month = index + 1
+
+  const monthTransactions =
+    transactions.filter(
+      (transaction) => {
+
+        const transactionMonth =
+          new Date(
+            transaction.created_at
+          ).getMonth() + 1
+
+        // THU NHẬP
+
+        if (
+          trendType === 'income'
+        ) {
+          return (
+            transaction.type ===
+              'income' &&
+            transactionMonth ===
+              month
+          )
+        }
+
+        // CHI TIÊU
+
+        if (
+          trendType === 'expense'
+        ) {
+          return (
+            transaction.type ===
+              'expense' &&
+            transactionMonth ===
+              month
+          )
+        }
+
+        // CATEGORY
+
+        return (
+          transaction.categories
+            ?.name === trendType &&
+          transactionMonth ===
+            month
+        )
+      }
+    )
+
+  const total =
+    monthTransactions.reduce(
+      (sum, transaction) =>
+        sum + transaction.amount,
+      0
+    )
+
+  return {
+    month: `T${month}`,
+    total,
+  }
+})
 
   // =========================
   // FETCH DATA
@@ -361,6 +435,62 @@ const updateTransaction = async (
     fetchTransactions()
   }
 }
+
+const groupedTransactions =
+  filteredTransactions.reduce(
+    (groups: any, transaction) => {
+
+      const date =
+        new Date(
+          transaction.created_at
+        )
+
+      const today =
+        new Date()
+
+      const yesterday =
+        new Date()
+
+      yesterday.setDate(
+        today.getDate() - 1
+      )
+
+      let groupTitle = date.toLocaleDateString(
+        'vi-VN',
+        {
+          day: 'numeric',
+          month: 'numeric',
+          year: 'numeric',
+        }
+      )
+
+      if (
+        date.toDateString() ===
+        today.toDateString()
+      ) {
+        groupTitle = 'Hôm nay'
+      }
+
+      else if (
+        date.toDateString() ===
+        yesterday.toDateString()
+      ) {
+        groupTitle = 'Hôm qua'
+      }
+
+      if (!groups[groupTitle]) {
+        groups[groupTitle] = []
+      }
+
+      groups[groupTitle].push(
+        transaction
+      )
+
+      return groups
+    },
+    {}
+  )
+  
   // =========================
   // UI
   // =========================
@@ -421,7 +551,7 @@ const updateTransaction = async (
             💸
           </div>
 
-          <h1 className="text-4xl font-extrabold tracking-tight text-black">
+          <h1 className="text-4xl font-extrabold tracking-tight text-black text-center">
             Sổ chi tiêu
           </h1>
         </div>
@@ -624,7 +754,7 @@ const updateTransaction = async (
         <div className="bg-white rounded-2xl p-5 shadow-sm mb-6">
 
           <h2 className="text-2xl font-extrabold tracking-tight text-black mb-4">
-            Biểu đồ chi tiêu
+            Biểu đồ chi tiêu tháng này
           </h2>
 
           <div className="h-72">
@@ -716,6 +846,101 @@ const updateTransaction = async (
           </div>
         </div>
 
+{/* TREND CHART */}
+
+<div className="bg-white rounded-2xl p-5 shadow-sm mb-6">
+
+  <div className="flex items-center justify-between mb-5">
+
+    <h2 className="text-2xl font-extrabold tracking-tight text-black">
+      Xu hướng chi tiêu
+    </h2>
+
+    <select
+      value={trendType}
+      onChange={(e) =>
+        setTrendType(
+          e.target.value
+        )
+      }
+      className="border border-gray-300 rounded-xl px-3 py-2 text-sm font-medium text-black"
+    >
+
+      <option value="income">
+        Thu nhập
+      </option>
+
+      <option value="expense">
+        Chi tiêu
+      </option>
+
+      {categories.map((item) => (
+        <option
+          key={item.id}
+          value={item.name}
+        >
+          {item.name}
+        </option>
+      ))}
+
+    </select>
+
+  </div>
+
+  <div className="h-72">
+
+    <ResponsiveContainer
+      width="100%"
+      height="100%"
+    >
+
+      <LineChart
+        data={trendData}
+      >
+
+        <CartesianGrid
+          strokeDasharray="3 3"
+        />
+
+        <XAxis
+          dataKey="month"
+        />
+
+        <YAxis
+          tickFormatter={(value) =>
+            `${value / 1000000}M`
+          }
+        />
+
+        <Tooltip
+          formatter={(value: any) =>
+            `${Number(
+              value
+            ).toLocaleString()}đ`
+          }
+        />
+
+        <Line
+          type="monotone"
+          dataKey="total"
+          stroke="#111827"
+          strokeWidth={3}
+          dot={{
+            r: 5,
+          }}
+          activeDot={{
+            r: 8,
+          }}
+        />
+
+      </LineChart>
+
+    </ResponsiveContainer>
+
+  </div>
+
+</div>
+
         {/* TRANSACTIONS */}
 
         <div className="flex flex-col gap-4">
@@ -731,138 +956,169 @@ const updateTransaction = async (
            </span>
            </p>
           )}
-          {filteredTransactions.length ===
-          0 ? (
-            <div className="bg-white rounded-2xl p-6 text-center text-gray-500">
-              No transactions yet
-            </div>
-          ) : (
-            filteredTransactions.map(
-              (transaction) => (
-                <div
-                  key={transaction.id}
-                  className="bg-white rounded-2xl p-4 shadow-sm"
-                >
-                  <div className="flex items-center justify-between">
+          {filteredTransactions.length === 0 ? (
 
-                    <div>
-  {editingId ===
-  transaction.id ? (
-    <div className="flex flex-col gap-2">
+  <div className="bg-white rounded-2xl p-6 text-center text-gray-500">
+    No transactions yet
+  </div>
 
-      <input
-        type="number"
-        value={editAmount}
-        onChange={(e) =>
-          setEditAmount(
-            e.target.value
-          )
-        }
-        className="border p-2 rounded-lg"
-      />
+) : (
 
-      <input
-        type="text"
-        value={editNote}
-        onChange={(e) =>
-          setEditNote(
-            e.target.value
-          )
-        }
-        className="border p-2 rounded-lg"
-      />
+  Object.entries(
+    groupedTransactions
+  ).map(
+    ([date, items]: any) => (
 
-      <button
-        onClick={() =>
-          updateTransaction(
-            transaction.id
-          )
-        }
-        className="bg-black text-white px-3 py-2 rounded-lg"
+      <div
+        key={date}
+        className="flex flex-col gap-3"
       >
-        Cập nhật
-      </button>
-    </div>
-  ) : (
-    <>
-      <p className="font-semibold text-black">
-        {transaction.note ||
-          'Không có ghi chú'}
-      </p>
 
-<p className="text-xs text-gray-400 mt-1">
-  📅{' '}
-  {new Date(
-    transaction.created_at
-  ).toLocaleDateString(
-    'vi-VN',
-    {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-    }
-  )}
-</p>
+        {/* DATE TITLE */}
 
-      <p className="text-sm text-gray-500">
-        {
-          transaction.categories
-            ?.name
-        }
-      </p>
-    </>
-  )}
-</div>
+        <h3 className="text-sm font-bold text-gray-500 px-1">
+          {date}
+        </h3>
 
-                    <p
-                      className={`font-bold ${
-                        transaction.type ===
-                        'income'
-                          ? 'text-green-600'
-                          : 'text-red-500'
-                      }`}
-                    >
-                      {transaction.type ===
-                      'income'
-                        ? '+'
-                        : '-'}
-                      {transaction.amount.toLocaleString()}
-                      đ
-                    </p>
-<button
-  onClick={() => {
-    setEditingId(
-      transaction.id
-    )
+        {/* TRANSACTION LIST */}
 
-    setEditAmount(
-      transaction.amount
-    )
+        {items.map(
+          (transaction: any) => (
 
-    setEditNote(
-      transaction.note || ''
-    )
-  }}
-  className="ml-3 text-sm bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
->
-  Sửa
-</button>
+            <div
+              key={transaction.id}
+              className="bg-white rounded-2xl p-4 shadow-sm"
+            >
 
-<button
-  onClick={() =>
-    deleteTransaction(
-      transaction.id
-    )
-  }
-  className="ml-3 text-sm bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition"
->
-  Xoá
-</button>
-                  </div>
+              <div className="flex items-center justify-between">
+
+                <div>
+
+                  {editingId ===
+                  transaction.id ? (
+
+                    <div className="flex flex-col gap-2">
+
+                      <input
+                        type="number"
+                        value={editAmount}
+                        onChange={(e) =>
+                          setEditAmount(
+                            e.target.value
+                          )
+                        }
+                        className="border p-2 rounded-lg"
+                      />
+
+                      <input
+                        type="text"
+                        value={editNote}
+                        onChange={(e) =>
+                          setEditNote(
+                            e.target.value
+                          )
+                        }
+                        className="border p-2 rounded-lg"
+                      />
+
+                      <button
+                        onClick={() =>
+                          updateTransaction(
+                            transaction.id
+                          )
+                        }
+                        className="bg-black text-white px-3 py-2 rounded-lg"
+                      >
+                        Cập nhật
+                      </button>
+
+                    </div>
+
+                  ) : (
+
+                    <>
+
+                      <p className="font-semibold text-black">
+                        {transaction.note ||
+                          'Không có ghi chú'}
+                      </p>
+
+                      <p className="text-sm text-gray-500">
+                        {
+                          transaction
+                            .categories
+                            ?.name
+                        }
+                      </p>
+
+                    </>
+
+                  )}
+
                 </div>
-              )
-            )
-          )}
+
+                <div className="flex items-center gap-2">
+
+                  <p
+                    className={`font-bold ${
+                      transaction.type ===
+                      'income'
+                        ? 'text-green-600'
+                        : 'text-red-500'
+                    }`}
+                  >
+                    {transaction.type ===
+                    'income'
+                      ? '+'
+                      : '-'}
+
+                    {transaction.amount.toLocaleString()}
+                    đ
+                  </p>
+
+                  <button
+                    onClick={() => {
+                      setEditingId(
+                        transaction.id
+                      )
+
+                      setEditAmount(
+                        transaction.amount
+                      )
+
+                      setEditNote(
+                        transaction.note ||
+                          ''
+                      )
+                    }}
+                    className="text-sm bg-blue-500 text-white px-3 py-1 rounded-lg"
+                  >
+                    Sửa
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      deleteTransaction(
+                        transaction.id
+                      )
+                    }
+                    className="text-sm bg-red-500 text-white px-3 py-1 rounded-lg"
+                  >
+                    Xoá
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+          )
+        )}
+
+      </div>
+    )
+  )
+)}
         </div>
       </div>
     </main>
